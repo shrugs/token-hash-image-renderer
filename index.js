@@ -1,33 +1,44 @@
 const express = require("express");
-const { chromium } = require("playwright")
+const puppeteer = require("puppeteer")
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get("/healthcheck", (req, res) => {
-  res.status(200).end()
-})
+app.get('/', (req, res) => {
+  res.status(200).end();
+});
 
 app.get(["/:uri"], async (req, res) => {
   const uri =  Buffer.from(req.params["uri"], 'base64').toString('ascii');
 
-  const browser = await chromium.launch();
+  // https://github.com/fly-apps/puppeteer-js-renderer/blob/master/index.js
+  const browser = await puppeteer.launch({
+    executablePath: process.env.NODE_ENV === 'production'
+      ? '/usr/bin/google-chrome'
+      : undefined,
+    headless: "new",
+    args: [
+      '--disable-gpu',
+      '--use-gl=egl',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ],
+  });
   const page = await browser.newPage();
 
-  await page.setViewportSize({ width: 1000, height: 1200 });
+  await page.setViewport({ width: 1000, height: 1200 });
 
-  await page.goto(uri);
+  await page.goto(uri, { waitUntil: 'networkidle0' });
   const element = await page.$("body");
-
-  // Capture screenshot
   const image = await element.screenshot({ type: 'png', omitBackground: true });
 
-  // Close the browser instance
   await browser.close();
 
+  res.setHeader('Content-Type', 'image/png');
   res.setHeader("Content-Disposition", `inline; filename="wrapped-tokenhash.png"`);
   res.setHeader("Cache-Control", `public, s-maxage=${6 * 30 * 24 * 60 * 60}`);
 
   res.status(200).send(image)
 });
 
-app.listen(port, () => console.log(`HelloNode app listening on port ${port}!`));
+app.listen(port, () => console.log(`listening on port ${port}!`));
