@@ -48,7 +48,7 @@ app.get(["/:uri"], async (req, res) => {
 
   await page.setViewport(viewport);
 
-  await page.goto(uri, { waitUntil: 'networkidle0' });
+  await page.goto(uri, { waitUntil: template === 5 ? 'domcontentloaded' : 'networkidle0' });
   const element = await page.$("body");
   let image = await element.screenshot({ type: 'png', omitBackground: true });
 
@@ -57,8 +57,12 @@ app.get(["/:uri"], async (req, res) => {
   switch (template) {
     case 5: {
       image = await sharp(image)
-        .extract({ left: 100, top: 200, width: 1024 - 200, height: 1024 - 400 - 100 })
-        .extend({top: 100, left: 100, right: 100, bottom: 100, background: '#FFF'})
+        .extract({
+          top: 200,
+          height: VIEWPORT_FOR_TEMPLATE[5].height - 400,
+          left: 0,
+          width: VIEWPORT_FOR_TEMPLATE[5].width,
+        })
         .resize({ width: 1024, height: 1024, fit: sharp.fit.cover })
         .png().toBuffer()
     }
