@@ -1,0 +1,1153 @@
+<html><!-- Fake It Till You Make It by Maya Man -->
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <script src="7_files/p5.min.js"></script>
+    <script>
+        const sp = new URLSearchParams(window.location.search).get("payload");
+        const searchParams = JSON.parse(sp ? atob(sp) : "{}")
+
+        console.log(searchParams.tokenId, searchParams.hash);
+
+        let tokenData = {
+            "tokenId": searchParams.tokenId,
+            "hash": searchParams.hash
+        }
+    </script>
+    <script>
+        let R;
+        const DEFAULT_SIZE = 1e3;
+        let WIDTH = 3096,
+            HEIGHT = 3096;
+        window.innerWidth > window.innerHeight ? (WIDTH = window.innerHeight, HEIGHT = window.innerHeight) : (WIDTH = window.innerWidth, HEIGHT = window.innerWidth);
+        let myCanvas,
+            bti,
+            bc1,
+            bc2,
+            txtc,
+            shadowColor,
+            stickers,
+            stickerTypeIndex,
+            shadow,
+            txtsi,
+            punctuation,
+            sentenceStructure,
+            newString,
+            idw,
+            numWords,
+            interjection,
+            canvas,
+            ctx,
+            approxOne = WIDTH / 800,
+            DIM = Math.min(WIDTH, HEIGHT),
+            M = DIM / 1e3,
+            textBoundingBoxes = [],
+            textMinX = WIDTH,
+            textMaxWidth = 0,
+            textMinY = HEIGHT,
+            textMaxHeight = 0,
+            specialText = !1,
+            splitText = !1,
+            solidPalette = [{
+                bgc: "#FFF3F9",
+                txtc: "#F17BB6",
+                sdc: "#EC4397"
+            }, {
+                bgc: "#FFC8E3",
+                txtc: "#EC4397",
+                sdc: "#FC92C7"
+            }, {
+                bgc: "#8ADEE3",
+                txtc: "#FEFEFE",
+                sdc: "#D5E3A2"
+            }, {
+                bgc: "#D5E3A2",
+                txtc: "#FC7BBB",
+                sdc: "#EC4397"
+            }, {
+                bgc: "#D5E3A2",
+                txtc: "#FC7BBB",
+                sdc: "#8ADEE3"
+            }, {
+                bgc: "#FFC8E3",
+                txtc: "#FEFAFD",
+                sdc: "#FEFAFD"
+            }, {
+                bgc: "#EC4397",
+                txtc: "#FEFAFD",
+                sdc: "#FC92C7"
+            }, {
+                bgc: "#FFADD6",
+                txtc: "#FEFAFD",
+                sdc: "#F39393"
+            }, {
+                bgc: "#FFC8E3",
+                txtc: "#EC4397",
+                sdc: "#FC92C7"
+            }, {
+                bgc: "#E97652",
+                txtc: "#FFC8E3",
+                sdc: "#FC92C7"
+            }, {
+                bgc: "#E97652",
+                txtc: "#FFEFF7",
+                sdc: "#E5D3FD"
+            }, {
+                bgc: "#EC4397",
+                txtc: "#FFC8E3",
+                sdc: "#FFC8C8"
+            }, {
+                bgc: "#E5D3FD",
+                txtc: "#FDFCFF",
+                sdc: "#FFEFF7"
+            }, {
+                bgc: "#E5D3FD",
+                txtc: "#FDFCFF",
+                sdc: "#FDFCFF"
+            }, {
+                bgc: "#FC7BBB",
+                txtc: "#C8D4FF",
+                sdc: "#E97652"
+            }, {
+                bgc: "#FC7BBB",
+                txtc: "#FEFAFD",
+                sdc: "#D5E3A2"
+            }, {
+                bgc: "#E5D3FD",
+                txtc: "#EC4397",
+                sdc: "#FFADD6"
+            }, {
+                bgc: "#FFC8C8",
+                txtc: "#FFFFFFFF",
+                sdc: "#FFB0B0"
+            }, {
+                bgc: "#FFADD6",
+                txtc: "#EC4397",
+                sdc: "#EC4397"
+            }, {
+                bgc: "#FC7BBB",
+                txtc: "#FFF3F9",
+                sdc: "#FFADD6"
+            }, {
+                bgc: "#C8D4FF",
+                txtc: "#FC7BBB",
+                sdc: "#E97652"
+            }, {
+                bgc: "#C8D4FF",
+                txtc: "#FFFFFF",
+                sdc: "#F39393"
+            }, {
+                bgc: "#FFADD6",
+                txtc: "#94A8F4",
+                sdc: "#94A8F4"
+            }, {
+                bgc: "#F39393",
+                txtc: "#FFC8E3",
+                sdc: "#EC4397"
+            }, {
+                bgc: "#FFEEEE",
+                txtc: "#F17BB6",
+                sdc: "#C8D4FF"
+            }, {
+                bgc: "#FFC8E3",
+                txtc: "#E97652",
+                sdc: "#EC4397"
+            }, {
+                bgc: "#D5E3A2",
+                txtc: "#EC4397",
+                sdc: "#FC7BBB"
+            }, {
+                bgc: "#C8D4FF",
+                txtc: "#EC4397",
+                sdc: "#F39393"
+            }],
+            gradientPalette = [{
+                gcs: ["#E5D3FD", "#FFC8E3", "#C8D4FF", "#D5E3A2"],
+                txtc: "#FFFFFF"
+            }, {
+                gcs: ["#FFC8C8", "#FFADD6", "#C8D4FF", "#D5E3A2"],
+                txtc: "#FFFFFF"
+            }, {
+                gcs: ["#EC4397", "#FFC8E3", "#EC4397"],
+                txtc: "#FFFFFF"
+            }, {
+                gcs: ["#FFC8E3", "#C8D4FF", "#FFC8E3", "#F39393"],
+                txtc: "#FFFFFF"
+            }, {
+                gcs: ["#DF4391", "#F17BB6", "#FFC8C8", "#E5D3FD"],
+                txtc: "#FFF3F9"
+            }, {
+                gcs: ["#C8D4FF", "#A2E3DC", "#D5E3A2"],
+                txtc: "#FEFEFE"
+            }, {
+                gcs: ["#FFC8E3", "#FFADD6", "#FFC8C8", "#F17BB6"],
+                txtc: "#E53030"
+            }, {
+                gcs: ["#E5D3FD", "#FFC8E3", "#C8D4FF", "#FEFEFE"],
+                txtc: "#EC4397"
+            }, {
+                gcs: ["#D5E3A2", "#A2E3DC", "#C8D4FF"],
+                txtc: "#FEFEFE"
+            }, {
+                gcs: ["#D5E3A2", "#FFC8E3", "#C8D4FF"],
+                txtc: "#FEFEFE"
+            }, {
+                gcs: ["#E5D3FD", "#FFC8E3", "#A2E3DC", "#D5E3A2"],
+                txtc: "#FFFFFF"
+            }],
+            checkersPalette = [{
+                txtc: "#FFFFFF",
+                bgc: "#C8D4FF",
+                ckc: "#FFC8E3",
+                sdc: "#C0CCF8"
+            }, {
+                txtc: "#ffffff",
+                bgc: "#FFC8E3",
+                ckc: "#E5D3FD",
+                sdc: "#D2BBF0"
+            }, {
+                txtc: "#ffffff",
+                bgc: "#FFC8E3",
+                ckc: "#FFADD6",
+                sdc: "#F8A7CF"
+            }, {
+                txtc: "#ffffff",
+                bgc: "#FFC8C8",
+                ckc: "#FFADD6",
+                sdc: "#F8A7CF"
+            }],
+            heartPalette = [{
+                hcs: ["#FFC8E3", "#FFADD6", "#FC7BBB"],
+                txtc: "#FEFAFD",
+                sdc: "#EC4397"
+            }, {
+                hcs: ["#F5EEFF", "#E5D3FD", "#CAAAF3"],
+                txtc: "#FCFAFE",
+                sdc: "#713DB2"
+            }, {
+                hcs: ["#D3F8F4", "#A2E3DC", "#70CBC1"],
+                txtc: "#FEFAFD",
+                sdc: "#18746A"
+            }, {
+                hcs: ["#E7ECFF", "#C8D4FF", "#899DE4"],
+                txtc: "#FAFAFE",
+                sdc: "#2E459A"
+            }],
+            textSizeOptions = [.077, .088, .099, .11, .12, .14, .155, .18, .19],
+            punctuationOptions = [".", "!", ".", "!", "", "", "", "", "", "", "", "", "", ""],
+            particles = [];
+        class Random {
+            constructor() {
+                this.useA = !1;
+                let t = function (t) {
+                    let F = parseInt(t.substr(0, 8), 16),
+                        s = parseInt(t.substr(8, 8), 16),
+                        c = parseInt(t.substr(16, 8), 16),
+                        i = parseInt(t.substr(24, 8), 16);
+                    return function () {
+                        F |= 0,
+                            s |= 0,
+                            c |= 0,
+                            i |= 0;
+                        let t = (F + s | 0) + i | 0;
+                        return i = i + 1 | 0, F = s ^ s >>> 9, s = c + (c << 3) | 0, c = c << 21 | c >>> 11, c = c + t | 0, (t >>> 0) / 4294967296
+                    }
+                };
+                this.prngA = new t(tokenData.hash.substr(2, 32)),
+                    this.prngB = new t(tokenData.hash.substr(34, 32));
+                for (let t = 0; t < 1e6; t += 2)
+                    this.prngA(),
+                        this.prngB()
+            }
+            r_d() {
+                return this.useA = !this.useA, this.useA ? this.prngA() : this.prngB()
+            }
+            r_n(t, F) {
+                return t + (F - t) * this.r_d()
+            }
+            r_i(t, F) {
+                return Math.floor(this.r_n(t, F + 1))
+            }
+            r_b(t) {
+                return this.r_d() < t
+            }
+            r_c(t) {
+                return t[this.r_i(0, t.length - 1)]
+            }
+        }
+        class GrowingHeart {
+            constructor(t, F, s, c) {
+                this.x = t,
+                    this.y = F,
+                    this.size = s,
+                    this.fill = c,
+                    this.active = !0
+            }
+            animate() {
+                angleMode(DEGREES),
+                    this.size += approxOne,
+                    fill(this.fill),
+                    noStroke(),
+                    heart3(WIDTH / 2, HEIGHT / 2 - this.size / 2, this.size),
+                    this.size > 4 * WIDTH && (this.active = !1)
+            }
+        }
+        class Orb {
+            constructor(t, F, s, c) {
+                this.x = t,
+                    this.y = F,
+                    this.r = s,
+                    this.c = c,
+                    this.vx = Math.random() * approxOne * 4,
+                    this.vy = Math.random() * approxOne * 4,
+                    this.sinValue = Math.random(),
+                    this.orbOffset = 10 * approxOne
+            }
+            animate(t, F, s) {
+                this.sinValue += .01,
+                    this.r += Math.sin(this.sinValue),
+                    this.x += this.vx,
+                    this.y += this.vy,
+                    this.x < 0 ? (this.vx *= -1, this.x += this.orbOffset) : this.x > F && (this.vx *= -1, this.x -= this.orbOffset),
+                    this.y < 0 ? (this.vy *= -1, this.y += this.orbOffset) : this.y > s && (this.vy *= -1, this.y -= this.orbOffset),
+                    t.beginPath();
+                const c = t.createRadialGradient(this.x, this.y, .1 * this.r, this.x, this.y, this.r);
+                c.addColorStop(0, "rgba(" + red(color(this.c)) + "," + green(color(this.c)) + "," + blue(color(this.c)) + ", 1)"),
+                    c.addColorStop(1, "rgba(" + red(color(this.c)) + "," + green(color(this.c)) + "," + blue(color(this.c)) + ", 0)"),
+                    t.fillStyle = c,
+                    t.arc(this.x, this.y, this.r, 0, 2 * Math.PI, !1),
+                    t.fill()
+            }
+        }
+        class CandyHeart {
+            constructor(t, F, s) {
+                this.string = t,
+                    this.color = F,
+                    this.type = s
+            }
+            draw(t, F, s) {
+                noStroke(),
+                    fill(this.color),
+                    noFill(),
+                    strokeWeight(.00444 * WIDTH),
+                    stroke(this.color),
+                    "heart" == this.type ? (fill(this.color), heart1(t, F, s)) : "flower" == this.type ? flower5Cutout(t, F + .444 * s, .444 * s, bc1, this.color) : (fill(this.color), star(t, F + s / 3, .3 * s * 2.22, .3 * s, 12)),
+                    textSize(.2444 * s),
+                    push(),
+                    stroke(txtc),
+                    fill(txtc),
+                    textAlign(CENTER, CENTER),
+                    translate(t, F + 1.444 * s),
+                    strokeWeight(s / 5 * .03 / 2),
+                    text(this.string, 0, 0),
+                    pop()
+            }
+        }
+        function resetValues() {
+            let e;
+            switch (R = new Random, stickers = !1, R.r_b(.7) ? (bti = R.r_i(0, 5), R.r_b(.05) && (bti = 6), 1 == bti && loop(), bti < 4 && (stickers = R.r_b(.444))) : R.r_b(.7) ? specialText = !0 : splitText = !0, R.r_b(.1) ? (textStyle(BOLDITALIC), stickers = !1) : textStyle(BOLD), (splitText || specialText) && (bti = 0, textStyle(BOLD)), stickers && (stickerTypeIndex = R.r_i(0, 1)), bti) {
+                case 0:
+                    e = R.r_c(solidPalette),
+                        bc1 = color(e.bgc),
+                        txtc = color(e.txtc),
+                        shadowColor = color(e.sdc);
+                    break;
+                case 1:
+                    loop(),
+                        e = R.r_c(gradientPalette),
+                        createOrbs(e.gcs),
+                        setGradientColors(e);
+                    break;
+                case 2:
+                case 3:
+                case 4:
+                    e = R.r_c(gradientPalette),
+                        setGradientColors(e),
+                        shadowColor = bc1;
+                    break;
+                case 5:
+                    noLoop(),
+                        e = R.r_c(checkersPalette),
+                        txtc = color(e.txtc),
+                        bc1 = color(e.bgc),
+                        bc2 = color(e.ckc),
+                        shadowColor = color(e.sdc),
+                        stickers = !1,
+                        shadow = !0;
+                    break;
+                case 6:
+                    loop(),
+                        e = R.r_c(heartPalette),
+                        txtc = color(e.txtc),
+                        shadowColor = color(e.sdc),
+                        heartColorStrings = e.hcs,
+                        stickers = !1,
+                        shadow = !0,
+                        heartRings = [];
+                    let t = 0;
+                    for (i = 4 * WIDTH; i > 0; i -= WIDTH / 7) {
+                        let e = color(heartColorStrings[t]),
+                            r = i;
+                        heartRings.push(new GrowingHeart(WIDTH / 2, HEIGHT / 2 - r / 2, r, e)),
+                            t = (t + 1) % heartColorStrings.length
+                    }
+            }
+            if (specialText)
+                switch (specialTextIndex = R.r_c([0, 1, 1, 2, 2, 3, 3]), loop(), specialTextIndex) {
+                    case 0:
+                        textSizeVal = .088 * WIDTH;
+                        let t = ns.concat(np, adj, aan, vrb),
+                            r = R.r_c(t);
+                        for (; r.split(" ").length >= 2 || r.length <= 8 || r.length >= 14;)
+                            r = R.r_c(t);
+                        let c = "";
+                        for (let e = 0; e < 7; e++)
+                            c = c + r + " ";
+                        newString = c.toUpperCase();
+                        break;
+                    case 1:
+                        specialTextWavy = R.r_b(.5),
+                            newString = createNewString();
+                        let n = WIDTH;
+                        WIDTH = 1e3,
+                            textSizeVal = .038 * WIDTH;
+                        let s = 60;
+                        specialTextWavy && (s = 36),
+                            textSize(textSizeVal);
+                        let i = !1,
+                            a = textSizeVal,
+                            o = ctx.font.split(" ");
+                        for (let e = 0; e < o.length; e++) {
+                            let t = o[e],
+                                r = t.indexOf("px");
+                            r >= 0 && (a = Number(t.substr(0, r)))
+                        }
+                        let l = textWidth(newString);
+                        for (a - Math.floor(a) == 0 && (i = !0, l = ctx.measureText(newString).width * textSizeVal / Math.round(textSizeVal)); l >= .7 * WIDTH || newString.length < 32 || newString.length > s;)
+                            newString = createNewString(),
+                                l = i ? ctx.measureText(newString).width * textSizeVal / Math.round(textSizeVal) : textWidth(newString);
+                        WIDTH = n,
+                            textSizeVal = .038 * WIDTH;
+                        break;
+                    case 2:
+                        candyHearts = [];
+                        let p = R.r_c(["flower", "heart", "star"]),
+                            d = e.sdc;
+                        if (R.r_b(.5)) {
+                            for (let e = 0; e < 9; e++) {
+                                let e = np.concat(ns),
+                                    t = R.r_c(e);
+                                t = t.charAt(0).toUpperCase() + t.slice(1),
+                                    candyHearts.push(new CandyHeart(t, d, p))
+                            }
+                            newString = R.r_c(invitations)
+                        } else {
+                            for (let e = 0; e < 9; e++) {
+                                let e = adj.concat(aan);
+                                candyHearts.push(new CandyHeart("I am " + R.r_c(e), d, p))
+                            }
+                            newString = R.r_c(affirmations)
+                        }
+                        textSizeVal = .0555 * WIDTH,
+                            noLoop();
+                        break;
+                    case 3:
+                        let x = "",
+                            g = 27;
+                        for (let e = 0; e < g; e++) {
+                            let t = R.r_c(instructions);
+                            x = e < g - 1 ? x + t.charAt(0).toUpperCase() + t.slice(1) + ". " : x + t.charAt(0).toUpperCase() + t.slice(1) + "."
+                        }
+                        newString = x,
+                            textSizeVal = .0444 * WIDTH,
+                            textSize(textSizeVal),
+                            noLoop()
+                }
+            else {
+                newString = createNewString(),
+                    txtsi = textSizeOptions.length - 1,
+                    idw = newString.split(" ");
+                let e = findLongestWord(idw);
+                if (numWords = idw.length, splitText) {
+                    for (centerSticker = R.r_i(0, 2), smileyType = R.r_i(0, 2), stickers = !1, noLoop(); numWords <= 4 || numWords >= 10 || e.length >= 8;)
+                        newString = createNewString(),
+                            idw = newString.split(" "),
+                            e = findLongestWord(idw),
+                            numWords = idw.length;
+                    textSizeVal = .0777 * WIDTH
+                } else
+                    e.length >= 13 && 12 == bti ? txtsi = 0 : e.length >= 13 ? txtsi = 1 : e.length >= 12 || numWords >= 10 ? txtsi = 2 : e.length >= 9 || numWords >= 8 ? txtsi = 3 : numWords >= 7 || e.length >= 8 || e >= 8 && "" != punctuation ? txtsi = 4 : numWords >= 6 ? (txtsi = 5, stickers = !1) : e.length >= 7 || numWords >= 5 ? (txtsi = 6, stickers = !1) : e.length >= 6 && (txtsi = 7, stickers = !1),
+                        e.length >= 10 && (stickers = !1),
+                        textSizeVal = textSizeOptions[txtsi] * WIDTH
+            }
+        }
+        function setGradientColors(e) {
+            txtc = color(e.txtc),
+                R.r_b(.5) ? (bc1 = color(e.gcs[0]), bc2 = color(e.gcs[1])) : (bc1 = color(e.gcs[1]), bc2 = color(e.gcs[0]))
+        }
+        function drawCharacter(e, t, r, c) {
+            push(),
+                fill(c),
+                stroke(c),
+                strokeWeight(.03 * textSizeVal),
+                textAlign(CENTER),
+                text(e, t, r),
+                pop()
+        }
+        function setGradient(e, t, r, c, n, s) {
+            noFill();
+            for (let i = t; i <= t + c; i++) {
+                let a = map(i, t, t + c, 0, 1),
+                    o = lerpColor(n, s, a);
+                stroke(o),
+                    line(e, i, e + r, i)
+            }
+        }
+        function setRadialGradient(e, t, r, c, n, s) {
+            background(s),
+                noFill();
+            for (let i = 0; i <= 1.5 * r; i++) {
+                let r = map(i, t, t + c, 0, 1),
+                    a = lerpColor(n, s, r);
+                stroke(a),
+                    circle(e, t, i)
+            }
+        }
+        function setRadialHeart(e, t, r, c, n, s, i) {
+            noFill();
+            let a = .4;
+            for (let c = 0; c <= r * a; c++) {
+                let i = map(c, 0, r * a, 0, 1),
+                    o = lerpColor(n, s, i);
+                stroke(o),
+                    strokeWeight(5),
+                    heart1(e, t - c / 2, c)
+            }
+            for (let c = r * a; c <= 2 * r; c++) {
+                let i = map(c, r * a, 1.5 * r, 0, 1),
+                    o = lerpColor(s, n, i);
+                stroke(o),
+                    strokeWeight(5),
+                    heart1(e, t - c / 2, c)
+            }
+        }
+        function star(e, t, r, c, n) {
+            angleMode(RADIANS);
+            let s = TWO_PI / n,
+                i = s / 2;
+            beginShape();
+            for (let n = 0; n < TWO_PI; n += s) {
+                let s = e + cos(n) * c,
+                    a = t + sin(n) * c;
+                vertex(s, a),
+                    s = e + cos(n + i) * r,
+                    a = t + sin(n + i) * r,
+                    vertex(s, a)
+            }
+            endShape(CLOSE)
+        }
+        function sparkle(e, t, r, c) {
+            angleMode(RADIANS);
+            let n = TWO_PI / 4,
+                s = n / 2;
+            beginShape();
+            let i = .888 * c,
+                a = e + cos(0) * i,
+                o = t + sin(0) * i;
+            curveVertex(a, o),
+                a = e + cos(0 + s) * r,
+                o = t + sin(0 + s) * r,
+                curveVertex(a, o),
+                a = a = e + cos(n) * c,
+                o = t + sin(n) * c,
+                curveVertex(a, o),
+                a = e + cos(n + s) * r,
+                o = t + sin(n + s) * r,
+                curveVertex(a, o),
+                a = e + cos(2 * n) * i,
+                o = t + sin(2 * n) * i,
+                curveVertex(a, o),
+                a = e + cos(2 * n + s) * r,
+                o = t + sin(2 * n + s) * r,
+                curveVertex(a, o),
+                a = a = e + cos(3 * n) * c,
+                o = t + sin(3 * n) * c,
+                curveVertex(a, o),
+                a = e + cos(3 * n + s) * r,
+                o = t + sin(3 * n + s) * r,
+                curveVertex(a, o),
+                a = a = e + cos(4 * n) * i,
+                o = t + sin(4 * n) * i,
+                curveVertex(a, o),
+                a = e + cos(4 * n + s) * r,
+                o = t + sin(4 * n + s) * r,
+                curveVertex(a, o),
+                a = a = e + cos(5 * n) * c,
+                o = t + sin(5 * n) * c,
+                curveVertex(a, o),
+                endShape()
+        }
+        function heart1(e, t, r) {
+            beginShape(),
+                vertex(e, t + .1 * r),
+                bezierVertex(e - .35 * r, t - .45 * r, e - 1.25 * r, t + .2 * r, e, t + 1.05 * r),
+                bezierVertex(e + 1.25 * r, t + .2 * r, e + .35 * r, t - .45 * r, e, t + .1 * r),
+                endShape(CLOSE)
+        }
+        function heart2(e, t, r) {
+            push();
+            let c = 0,
+                n = [];
+            for (angleMode(RADIANS); c < TWO_PI;) {
+                beginShape();
+                for (let e of n)
+                    vertex(e.x, e.y);
+                endShape();
+                const s = r,
+                    i = 16 * s * pow(sin(c), 3),
+                    a = -s * (13 * cos(c) - 5 * cos(2 * c) - 2 * cos(3 * c) - cos(4 * c));
+                n.push(createVector(e + i, t + a)),
+                    c += .01
+            }
+            pop()
+        }
+        function heart3(e, t, r) {
+            beginShape(),
+                vertex(e, t),
+                bezierVertex(e - r / 2, t - .55 * r, e - 1.25 * r, t + .3 * r, e, t + r),
+                bezierVertex(e + 1.25 * r, t + .3 * r, e + r / 2, t - .55 * r, e, t),
+                endShape(CLOSE)
+        }
+        function cuteFace(e, t, r, c, n) {
+            angleMode(RADIANS);
+            var s = .1 * PI,
+                i = .9 * PI,
+                a = .04 * r;
+            stroke(c),
+                strokeWeight(.04 * textSizeVal),
+                noFill(),
+                arc(e, t, a, a, s, i);
+            var o = .027 * r,
+                l = .016 * r;
+            if (0 == n || 1 == n)
+                fill(c),
+                    ellipse(e - o, t - o, l, 1 * l);
+            else {
+                var p = 0,
+                    d = PI;
+                noFill(),
+                    arc(e - o, t - o, l, l, d, p)
+            }
+            if (0 == n || 2 == n)
+                fill(c),
+                    ellipse(e + o, t - o, l, 1 * l);
+            else {
+                p = 0,
+                    d = PI;
+                noFill(),
+                    arc(e + o, t - o, l, l, d, p)
+            }
+        }
+        function flower5Cutout(e, t, r, c, n) {
+            push(),
+                angleMode(RADIANS),
+                strokeWeight(.05 * textSizeVal),
+                fill(n),
+                flower5(e, t, r),
+                fill(c),
+                circle(e, t, 1.3 * r),
+                pop()
+        }
+        function flower5(e, t, r) {
+            push(),
+                angleMode(RADIANS),
+                translate(e, t);
+            for (let e = 0; e < 6; e++)
+                ellipse(0, r, 1.1 * r, 1.2 * r),
+                    rotate(PI / 3);
+            pop()
+        }
+        function findLongestWord(e) {
+            let t = e[0];
+            for (let r = 0; r < e.length; r++)
+                e[r].length > t.length && (t = e[r]);
+            return t
+        }
+        function createNewString() {
+            let e = R.r_c(punctuationOptions);
+            stickers && (e = "");
+            let t = R.r_c(sentenceStructures),
+                r = "";
+            interjection = R.r_b(.1),
+                interjection && (t.splice(0, 0, ","), t.splice(0, 0, "intrj"));
+            for (let e = 0; e < t.length; e++) {
+                let c = !0,
+                    n = "";
+                switch (t[e]) {
+                    case "np":
+                        n = R.r_c(np);
+                        break;
+                    case "ns":
+                        n = R.r_c(ns);
+                        break;
+                    case "nouns_mixed":
+                        let r = np.concat(ns);
+                        n = R.r_c(r);
+                        break;
+                    case "wp":
+                        n = R.r_c(wp);
+                        break;
+                    case "ws":
+                        n = R.r_c(ws);
+                        break;
+                    case "adv":
+                        n = R.r_c(adv);
+                        break;
+                    case "adj":
+                        n = R.r_c(adj);
+                        break;
+                    case "aan":
+                        n = R.r_c(aan);
+                        break;
+                    case "amx":
+                        let c = adj.concat(aan);
+                        n = R.r_c(c);
+                        break;
+                    case "vrb":
+                        n = R.r_c(vrb);
+                        break;
+                    case "ving":
+                        n = R.r_c(ving);
+                        break;
+                    case "ved":
+                        n = R.r_c(ved);
+                        break;
+                    case "vs":
+                        n = R.r_c(vs);
+                        break;
+                    case "instructions":
+                        n = R.r_c(instructions);
+                        break;
+                    case "dobj":
+                        n = R.r_c(dobj);
+                        break;
+                    case "tms":
+                        n = R.r_c(tms);
+                        break;
+                    case "dtm":
+                        n = R.r_c(dtm);
+                        break;
+                    case "intrj":
+                        n = R.r_c(intrj);
+                        break;
+                    case "aer":
+                        n = R.r_c(aer);
+                        break;
+                    case "as":
+                        n = R.r_c(as);
+                        break;
+                    default:
+                        n = t[e]
+                }
+                r += n,
+                    nspc && nspc.indexOf(t[e + 1]) >= 0 && (c = !1),
+                    e < t.length - 1 && c && (r += " ")
+            }
+            return r += e, r = r.toUpperCase(), r = r.replace(/i /g, "I "), r = r.replace(/i'/g, "I'"), r
+        }
+        function createOrbs(e) {
+            let t = 0;
+            particles = [];
+            let r = .9 * WIDTH,
+                c = .4 * WIDTH;
+            for (let n = 0; n < 11; n++) {
+                const s = new Orb(R.r_d() * WIDTH, R.r_d() * HEIGHT, R.r_d() * (r - c) + c, e[t]);
+                ++t >= e.length && (t = 0),
+                    particles[n] = s
+            }
+        }
+        function genNote() {
+            let e = adj.concat(aan);
+            return R.r_c(intrj) + ", u are " + R.r_c(e) + " <3"
+        }
+        let tms = ["sometimes", "daily", "for a minute", "now and then"],
+            vrb = ["obsess", "scroll", "suffer", "meditate", "recharge", "wish", "donate", "cry", "protect", "celebrate", "teach", "make", "harm", "disguise", "mute", "repair", "repeat", "fly", "overthink", "think", "date", "rest", "hate", "enchant", "captivate", "nap", "drink", "inhale", "exhale", "invest", "empower", "smile", "slay", "emerge", "visualize", "block", "accomplish", "reward", "activate", "vote", "help", "leave", "complete", "fail", "attract", "change", "doubt", "breathe", "tag", "compliment", "start", "reduce", "eat", "learn", "bother", "impress", "manifest", "research", "discard", "entertain", "end", "outweigh", "offend", "become", "clean", "support", "sparkle", "arrive", "crave", "forget", "like", "annoy", "glow", "realize", "expect", "scare", "upgrade", "respect", "fall", "hug", "worry", "heal", "seek", "love", "welcome", "yearn", "shrink", "text", "outgrow", "dance", "shop", "take", "underestimate", "define", "embrace", "rush", "speak", "regret", "shock", "control", "unfollow", "tune", "soak", "cleanse", "hustle", "grind", "shine", "feel", "trust", "watch", "want", "deserve", "dream", "believe", "receive", "turn", "vibe", "look", "follow", "choose", "grow", "focus", "quit", "admire", "consume", "strengthen", "find", "simplify", "practice", "forgive"],
+            ved = ["obsessed", "protected", "celebrated", "harmed", "disguised", "repaired", "repeated", "thought", "hated", "captivated", "empowered", "emerged", "blocked", "accomplished", "activated", "helped", "failed", "changed", "tagged", "reduced", "learned", "bothered", "researched", "offended", "cleaned", "craved", "forgot", "liked", "realized", "expected", "upgraded", "healed", "loved", "welcomed", "yearned", "filled", "thought", "underestimated", "defined", "embraced", "rushed", "worried", "allowed", "heard", "seen", "treated", "controlled", "unfollowed", "soaked", "cleansed", "hustled", "felt", "trusted", "watched", "wanted", "deserved", "dreamed", "believed", "received", "turned", "vibed", "grew", "quit", "chose", "followed", "admired", "consumed", "found", "simplified"],
+            ving = ["praying", "obsessing", "scrolling", "suffering", "meditating", "ghosting", "wishing", "donating", "crying", "protecting", "celebrating", "teaching", "harming", "repairing", "repeating", "settling", "flying", "overthinking", "waiting", "thinking", "dating", "resting", "hating", "napping", "drinking", "shaming", "investing", "empowering", "emerging", "pleasing", "visualizing", "blocking", "accomplishing", "activating", "helping", "leaving", "failing", "changing", "tagging", "declining", "complimenting", "reducing", "eating", "learning", "bothering", "researching", "offending", "becoming", "cleaning", "sparkling", "craving", "forgetting", "liking", "annoying", "glowing", "realizing", "expecting", "stressing", "scaring", "upgrading", "respecting", "falling", "hugging", "worrying", "seeking", "loving", "texting", "outgrowing", "dancing", "shopping", "embracing", "defining", "rushing", "speaking", "manifesting", "minding", "attracting", "refusing", "healing", "showing", "unfollowing", "hustling", "trusting", "watching", "gaslighting", "blaming", "receiving", "maturing", "unfolding", "creating", "expressing", "vibing", "doing", "feeling", "surviving", "carrying", "consuming", "finding", "practicing"],
+            vs = ["wishes", "cries", "protects", "teaches", "harms", "mutes", "motivates", "repairs", "thinks", "dates", "hates", "enchants", "captivates", "empowers", "emerges", "forgives", "visualizes", "blocks", "accomplishes", "activates", "helps", "leaves", "completes", "attracts", "smells", "changes", "compliments", "reduces", "eats", "learns", "bothers", "manifests", "researches", "discards", "outweighs", "offends", "becomes", "cleans", "sparkles", "arriving", "craves", "forgets", "likes", "annoys", "glows", "realizes", "expects", "stresses", "scares", "respects", "falls", "hugs", "heals", "worries", "feels", "looks", "cares", "seeks", "loves", "welcomes", "yearns", "texts", "dances", "shops", "outgrows", "underestimates", "defines", "embraces", "rushes", "speaks", "regrets", "unfollows", "follows", "grinds", "shines", "deserves", "trusts", "consumes", "believes", "receives", "quits", "admires", "practices"],
+            adv = ["effortlessly", "apologetically", "automatically", "wildly", "sincerely", "mindfully", "emotionally", "frequently", "easily", "fearlessly", "highly", "abundantly", "perfectly", "alone", "completely", "continuously", "unexpectedly", "absolutely"],
+            ns = ["rejection", "jealousy", "god", "creativity", "insecurity", "guilt", "peace", "growth", "support", "product", "competition", "future", "confidence", "literature", "screenshot", "death", "character", "ex", "algorithm", "family", "determination", "marriage", "ambition", "wisdom", "manipulation", "empathy", "sleep", "treatment", "sadness", "gossip", "change", "uncertainty", "certainty", "vibe", "goal", "time", "harmony", "balance", "reality", "aura", "clarity", "ego", "feeling", "career", "screen time", "conversation", "pressure", "vision", "truth", "woman", "business", "skincare", "rule", "solar eclipse", "moon", "pressure", "journey", "instagram", "thought", "content", "sunday", "mindset", "prosperity", "soulmate", "priority", "body", "friday", "miracle", "money", "achievement", "health", "respect", "patience", "project", "self love", "anxiety", "energy", "dream", "self care", "consistency", "existence", "validation", "connection", "space", "burnout", "transformation", "capitalism", "heartbreak", "liberation", "love", "disagreement", "trauma", "emotion", "resentment", "destiny", "success", "worth", "sensitivity", "coffee", "internet", "weight", "authenticity", "approval", "abundance", "progress", "perfection", "social media", "fear", "faith", "softness", "compassion", "power", "gratitude", "attitude", "mind", "potential", "focus", "day", "peace", "kindness", "hope", "life", "purpose", "friendship", "cycle", "world", "everything", "compliment", "masterpiece", "light", "joy", "heart"],
+            np = ["adventures", "manifestations", "avocados", "secrets", "followers", "pics", "pleasures", "memories", "failures", "accounts", "fears", "wounds", "healers", "leaders", "standards", "excuses", "worries", "prayers", "moments", "solutions", "situations", "goals", "men", "conversations", "women", "quirks", "rules", "endings", "diamonds", "beginnings", "soulmates", "achievements", "projects", "answers", "problems", "anxieties", "mistakes", "thoughts", "experiences", "bodies", "people", "friendships", "tears", "feelings", "riches", "troubles", "girls", "numbers", "breakups", "intentions", "boundaries", "setbacks", "dreams", "relationships", "signs", "mondays", "compliments", "things", "vibes", "souls"],
+            adj = ["casual", "scary", "rich", "gorgeous", "lazy", "cosmic", "passionate", "personal", "funny", "special", "creative", "courageous", "bold", "wrong", "sexy", "hot", "messy", "painful", "fierce", "green", "calm", "careful", "fantastic", "cherished", "talented", "smart", "wishful", "financial", "tangible", "real", "motivated", "groovy", "little", "mean", "magic", "sad", "selfish", "meaningful", "social", "normal", "blurry", "tired", "simple", "consistent", "goofy", "strong", "dumb", "hard", "disrespectful", "nice", "productive", "late", "lovely", "lucky", "subconscious", "confident", "cute", "psycho", "valuable", "hyper-sensitive", "peaceful", "clear", "private", "small", "big", "proud", "mental", "deep", "fearless", "nourishing", "wealthy", "powerful", "soft", "thankful", "healthy", "radical", "new", "beautiful", "weak", "life-changing", "happy", "valid", "sensitive", "magnetic", "temporary", "boring", "negative", "positive", "slow", "true", "contagious", "kind", "tough", "genuine", "different", "blessed", "fresh", "toxic", "right", "familiar", "powerful", "bad", "right", "good", "great", "grateful"],
+            aan = ["online", "unhealthy", "unbothered", "intelligent", "unique", "irl", "emotional", "expensive", "instagram worthy", "ugly", "imperfect", "iconic", "awesome", "unclear", "exhausted", "unconditional", "adult", "afraid", "american", "important", "aware", "unloveable", "unstoppable", "amazing", "enough", "okay", "empowered", "energetic", "authentic"],
+            aer = ["bigger", "scarier", "hotter", "messier", "greener", "stronger", "nicer", "luckier", "clearer", "prouder", "softer", "healthier", "newer", "weaker", "happier", "slower", "truer", "kinder", "tougher", "fresher", "better", "greater", "wealthier"],
+            as = ["richest", "hottest", "deepest", "nicest", "latest", "cutest", "best", "luckiest", "proudest", "softest", "healthiest", "newest", "weakest", "happiest", "slowest", "kindest", "toughest", "greatest", "wealthiest"],
+            wp = ["everyone's", "her", "your", "their", "our"],
+            ws = ["you", "we", "they", "people"],
+            dobj = ["yourself", "us", "them", "me"],
+            intrj = ["babygirl", "babe", "yes", "hey you", "hey girl", "sis", "remember", "hey babe", "actually", "remember babe", "girl"],
+            instructions = ["smell flowers", "buy art", "stretch", "pet animals", "be with nature", "cut off negativity", "give a compliment", "buy some flowers", "use a face mask", "call a friend", "draw", "gratitude journal", "sleep in", "play a game", "exercise", "wash your face", "sing a song", "wave at someone", "take a picture", "plan your day", "declutter", "sleep early", "scroll less", "unplug", "take deep breaths", "make tea", "enjoy your breakfast", "get moving", "hydrate", "make your bed", "brush your teeth", "recharge yourself", "be consistent", "trust in life", "be present", "befriend your mind", "heighten your awareness", "go to therapy", "be intentional", "learn to trust", "accept yourself", "set boundaries", "get outside", "donate", "take a break", "embrace your quirks", "upgrade your life", "spread kindness", "stay present", "smile", "celebrate tiny wins", "keep moving", "be the main character", "be nice", "show up", "lather yourself in coconut oil", "deep focus", "accept yourself", "be thankful", "be authentic", "block toxic ppl", "know your worth", "identify your talents", "keep going", "embrace it", "have a healthy snack", "get some fresh air", "take a deep breath", "speak up", "try something new", "ask for help", "let go", "take a break", "start over", "say no", "forgive yourself", "celebrate small wins", "write down clear goals", "visualize your outcome", "identify your struggles", "be fit", "get dressed up", "compliment yourself", "research skincare", "journal daily", "clean your spaces", "drink water", "lather yourself in coconut oil", "get your nails done", "read books", "start a business", "slow down", "read frequently", "move your body", "post selfies", "get in shape", "work hard", "raise your standards", "eat too much pizza", "be selfish", "love the real you", "find balance", "do a face mask", "facetime your girl gang", "count your blessings", "stay at home", "breathe", "protect your peace", "love yourself"],
+            dtm = ["you", "it", "us", "them", "the world"],
+            invitations = ["take what you need", "holding space for...", "validation looks like...", "NEVER feel guilty about", "let's normalize", "mental health needs", "make space for...", "healthy human needs", "things to keep", "let go of"],
+            affirmations = ["today's affirmations", "remember...", "affirmations for the day", "important reminders", "gentle reminders", "tell yourself", "stop scrolling", "check in with yourself", "positive affirmations", "higher self"],
+            nspc = [",", "..."];
+        let sentenceStructures = [["np", "are part of the process"], ["amx", "ns", "energy"], ["wp", "ns", "is", "amx"], ["I am", "adv", "amx"], ["I am", "ving", "into my full", "ns"], ["today is a", "adj", "day"], ["ws", "deserve the", "ns", "of your dreams"], ["my love language is", "np"], ["don't feel bad about", "ving"], ["I'm", "adj", "but I'm not for everybody"], ["it's", "adj", "to not be", "adj"], ["the world is", "adj", "because you're in it"], ["life is", "adj", "but so are you"], ["I", "adv", "vrb"], ["I", "vrb", "my", "ns"], ["be", "adj", "to your", "ns"], ["you can do", "adj", "np"], ["instructions", ",", "instructions", ",", "instructions"], ["vrb", "in", "dobj"], ["there is", "ns", "in", "ns"], ["adj", "vibes"], ["you look", "adj", "today"], ["take care of your", "ns"], ["it's okay to", "vrb", "your", "ns"], ["I will turn my", "ns", "into a masterpiece"], ["vrb", "np", "that make you feel", "adj", "about yourself"], ["you don't have to be your", "adj", "self"], ["it's ok to be", "adj"], ["ns", "is a liar"], ["make your future self", "adj"], ["normalize", "np"], ["actually life is", "adj", "and I do have", "np"], ["don't let", "np", "on social media", "vrb", "your life"], ["aim for", "ns", "forget about", "np"], ["everyone needs a little extra", "ns", "tms"], ["make it happen girl,", "vrb", "everyone"], ["just keep", "ving", "the best you can"], ["instructions", "for you"], ["they are gonna regret how they", "ved", "you"], ["np", "are always", "adj"], ["don't trade your", "ns", "for", "ns"], ["I use my", "adj", "mind", "to attract", "np"], ["your", "ns", "is not your", "worth"], ["vrb", "in your", "ns"], ["don't let the internet", "vrb", "you"], ["don't feel bad for", "ving"], ["your feelings are always", "adj"], ["remember how strong you are for", "ving", "every day"], ["may you feel", "ved", "may you feel", "ved"], ["the", "adj", "np", "come", "adv"], ["you are allowed to", "vrb", "nouns_mixed"], ["ving", "ns", "does not make you a", "adj", "person"], ["how your", "ns", "vs", "is more important than how it", "vs"], ["what a", "adj", "day to not", "vrb", "your", "ns"], ["we will not let", "ns", "vrb", "us"], ["adj", "ns", "is also", "ns", "and", "ns"], ["our", "np", "vrb", "for", "ns"], ["ns", "is a scam"], ["you deserve", "adj", "ns"], ["stop carrying", "adj", "np", "into", "adj", "np"], ["give yourself", "nouns_mixed"], ["let's", "vrb", "and get rid of all", "adj", "np"], ["tell your people you", "vrb", "them"], ["amx", "but", "adj"], ["vrb", "nouns_mixed", "not", "nouns_mixed"], ["my", "np", "don't", "vrb", "me"], ["I am filled with", "np", "for all of my", "np"], ["no one has a", "adj", "ns"], ["your", "ns", "is", "adv", "amx"], ["ns", "is more important", "than", "nouns_mixed"], ["you deserve", "adj", "nouns_mixed"], ["ns", "should be the most", "adj", "above all else"], ["adj", "things will", "vrb", "you"], ["current vibe:", "ving", "to", "vrb"], ["you are", "ving", "the most", "amx", "things to you", "tms"], ["ving", "my", "np"], ["ns"], ["ns", "is infinite"], ["never stop", "ving"], ["your", "ns", "is lying to", "dtm"], ["I am only getting", "aer", ",", "aer", "&", "aer"], ["I fill my mind with", "amx", "and", "amx", "np"], ["I am", "adv", "amx"], ["ns", "is not the answer to all of your", "np"], ["fall in love with", "amx", "ving"], ["some", "np", "have to end for", "aer", "np", "to begin"], ["current vibe:", "ving", "my", "adj", "ns"], ["you are good for my", "adj", "ns"], ["you will be so", "amx", "it will scare you"], ["ns", "comes to me", "adv", "and", "adv"], ["stop", "ving", ",", "something", "amx", "is about to happen to you"], ["making myself", "amx"], ["amx", "heart,", "amx", "mind"], ["I", "vrb", "the", "amx", "and I am ready for the", "amx"], ["intrj", ",", "vrb", "even if it annoys people"], ["ws", "will make it through this", "ns"], ["never", "vrb", "how", "amx", "you are"], ["amx", "but", "amx"], ["sometimes you", "vrb", "sometimes you", "vrb"], ["never let the", "np", "you", "vrb", "make you forget", "the", "np", "you have"], ["stop being", "adj", "to be", "adj"], ["thank u for", "ving", "my", "ns"], ["my", "amx", "ns", "is", "ved", "with", "ns"], ["today is your", "as", "ns"], ["amx", "np", "are near"], ["amx", "np", "are not", "amx"], ["everyone's", "ving", "for", "you"], ["be such a", "adj", "soul", "that", "ws", "vrb", "your", "np"], ["ns", "is everything"], ["lay low and", "vrb"], ["you are also capable of being", "adj", "tms"], ["ns", "baby"], ["better to be", "adj", "than to", "vrb"], ["taking care of", "dobj", "is", "amx"], ["vrb", "the people that", "vrb", "you"], ["vrb", "yourself the same way you", "vrb", "others"], ["vrb", "the", "ns", "of", "amx", "np"], ["ving", "is part of", "ving"], ["vrb", "a little", "aer", "today"], ["vrb", "the", "ns", "and who you are", "ving"], ["think", "ns", "think", "ns"], ["ns", "is", "adj"], ["ns", "creates", "np"], ["end", "amx", "ving"], ["the", "np", "won't", "vrb", "you"], ["be with someone who never makes you feel", "amx"], ["you are", "amx", ",", "you are", "amx"], ["vrb", "in the", "ns"], ["stop", "ving", "np", "for", "np"], ["all of your", "amx", "np", "make the world a", "adj", "place"], ["vrb", "it so you can", "vrb", "it"], ["ving", "my own", "ns"], ["keep your", "ns", "amx", "yet", "amx"], ["I'm really", "adv", "amx"], ["I'm not a woman", "ving", "to", "vrb", ",", "I'm a woman", "ving", "to", "vrb"], ["amx", "amx", "vibes"], ["don't let anyone", "vrb", "you like", "amx", "np"], ["instructions", "for yourself"], ["vrb", "your", "ns"], ["vrb", "adv"], ["vrb", "adv"], ["I deserve to have", "adj", "np", "and I", "vrb", "them now"], ["you can't be", "adj", "for everyone"], ["just", "vrb"], ["ns", "will find you when you stop", "ving"], ["show up as the", "amx", "ns", "you are"], ["I'm worthy of my", "amx", "ns"], ["vrb", "your", "ns"], ["this year", "vs", "like", "ns", ",", "ving", "and", "ns"], ["I am attracting", "amx", "ns", "into my life"], ["amx"], ["I'm focused on", "ving", "my", "adj", "life"], ["be", "adj", "to one another"], ["adj", "and", "adj"], ["vrb", "to", "vrb"], ["making", "np", "amx"], ["vrb", ",", "vrb", ",", "vrb", ",", "vrb"], ["focus on your", "np", ",", "not", "np"], ["you only", "vrb", "when you stop", "ving"], ["np", "are", "amx", ",", "np", "are", "amx"], ["every", "ns", "is", "amx"], ["I", "vrb", "me"], ["don't", "vrb", ",", "vrb"], ["watch me", "vrb", "everything I", "vrb"], ["tell yourself today:", "I", "vrb", "my", "ns"], ["fall in love with", "np", "that don't", "vrb", "ns"], ["congrats on", "ving", "that", "amx", "ns"], ["I can do", "amx", "np"], ["amx", "ns"], ["vrb", "in", "ns", "to", "vrb", "ns"], ["amx", "np", "take", "ns"], ["help", "np", "vrb"], ["amx", "for", "np"], ["vrb", ",", "vrb", ",", "vrb"], ["give your", "ns", "to the", "amx", "np"], ["let", "np", "vrb"], ["visualize", "ving", "your", "ns"], ["be", "aer", "than", "ns"], ["I am proud of my", "ns"], ["my", "ns", "is the", "as"], ["their", "ns", "is not my", "ns"], ["vrb", "now"], ["I deserve", "ns", "and", "ns"], ["I deserve", "ns", "and", "ns"], ["vrb", "it"], ["ns", "is", "ns"], ["don't", "vrb", "np"], ["np", "will", "vrb"], ["be the", "ns", "you want to", "vrb"], ["a little", "ns", "is always", "amx"], ["np", "are always", "amx"], ["vrb", "your", "ns"], ["vrb", ",", "vrb", ",", "repeat"], ["I'm", "ving", "to", "vrb"], ["ns", "is about", "np"], ["you are not", "amx"], ["stay", "amx"], ["don't be", "amx"], ["do", "np"], ["I", "vrb", "it all"], ["go where your", "ns", "feels", "amx"], ["note to self: turn your", "np", "into", "np"], ["repeat after me: I am", "amx"], ["amx", "ns", "is the", "amx", "ns"], ["amx", "ns", "and", "amx", "ns"], ["be", "adv", "amx"], ["be", "aer", "than your", "np"], ["use your", "ns", "to", "vrb"], ["vrb", "in", "yourself"], ["current mood:", "ving", "through", "ns"], ["in the mood to be", "amx"], ["it's all", "amx", "baby"], ["I think I'll", "vrb", "today"], ["be the", "ns", "that", "vs"], ["vrb", "all", "but", "vrb", "no one"], ["your", "ns", "is", "amx"], ["people will", "vrb", "you", ",", "people will", "vrb", "you"], ["it's okay to", "vrb"], ["ns", "is not", "adj", "ving"], ["spread", "ns"], ["you are", "ved"], ["you are", "ved", ",", "you are", "ved"], ["you're", "amx", "and you deserve a", "adj", "life"], ["ns", "has a", "adj", "impact on my", "np"], ["your", "np", "are", "ving", "for you"], ["you're not", "amx", ",", "you're", "ving"], ["adv", "amx", "people make", "amx", "np"], ["all you ever need to be is", "amx", "for yourself"], ["hey, you look", "amx"], ["ns", "reflects", "ns", ",", "never forget that"], ["it's feeling like a", "adj", "girl winter"], ["it's feeling like a", "adj", "girl summer"], ["you're", "adj", "to me", ",", "stop", "ving"], ["ns", "vs", "ns"], ["amx", "ns", "vs", "ns"], ["be careful", ",", "ns", "can feel like", "ns"], ["turn your", "np", "into", "ns"], ["never be an", "aan", "ns"], ["it's", "amx", "to", "vrb", "alone"], ["normalize not", "ving"], ["we", "vrb", "what we don't", "vrb"], ["ns", "is", "amx"], ["know this:", "you are so", "amx"], ["vrb", "what no longer", "vs", "you"], ["ns", "and", "ns", "look", "amx", "on you"], ["shout out to those who haven't felt", "amx", "adv"], ["you do not need", "ns", "to be", "amx"], ["let your", "np", "make you", "amx"], ["ns", "looks so", "amx", "on you"], ["amx", "energy"]];
+        function setup() {
+            myCanvas = createCanvas(WIDTH, HEIGHT),
+                canvas = document.getElementById("defaultCanvas0"),
+                ctx = canvas.getContext("2d"),
+                noLoop(),
+                resetValues(),
+                textFont("Arial, sans-serif"),
+                textAlign(CENTER, CENTER),
+                strokeJoin(ROUND),
+                strokeCap(ROUND),
+                console.log(genNote()),
+                console.log("* https://fakeittillyoumakeit.lol/"),
+                console.log("* https://youtu.be/0DSO5Khbi1s?t=25"),
+                console.log("* https://youtu.be/mv4RfqtKBPs"),
+                console.log("* https://youtu.be/IDklDH4PVAs?t=747"),
+                console.log("* https://youtu.be/CarJ6OPV74o")
+        }
+        function draw() {
+            switch (bti) {
+                case 0:
+                case 7:
+                    background(bc1);
+                    break;
+                case 1:
+                    background(bc1);
+                    for (let t = 0; t < particles.length; t++) {
+                        particles[t].animate(ctx, WIDTH, HEIGHT)
+                    }
+                    break;
+                case 2:
+                    background(bc1),
+                        setGradient(0, 0, WIDTH, HEIGHT, bc2, bc1),
+                        noStroke();
+                    break;
+                case 3:
+                    setRadialGradient(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, bc1, bc2),
+                        noStroke();
+                    break;
+                case 4:
+                    setRadialHeart(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, bc1, bc2, bc2),
+                        noStroke();
+                    break;
+                case 5:
+                    background(bc1);
+                    let t = int(WIDTH / 40),
+                        e = !1;
+                    for (let l = 0; l < WIDTH; l += t) {
+                        for (let a = 0; a < HEIGHT; a += 2 * t)
+                            fill(bc2),
+                                noStroke(),
+                                e ? rect(a + t, l, t, t) : rect(a, l, t, t);
+                        e = !e
+                    }
+                    fill(255, 100),
+                        fill(red(txtc), green(txtc), blue(txtc), 11),
+                        rect(0, 0, WIDTH, HEIGHT);
+                    break;
+                case 6:
+                    for (let t = 0; t < heartRings.length; t++)
+                        heartRings[t].animate(),
+                            heartRings[t].active || (heartRings.splice(t, 1), heartRings.push(new GrowingHeart(WIDTH / 2, HEIGHT / 2, 0, heartRings[t + 1].fill)));
+                    fill(red(shadowColor), green(shadowColor), blue(shadowColor), 11),
+                        rect(0, 0, WIDTH, HEIGHT)
+            }
+            textSize(textSizeVal);
+            let t = 1.04 * textSizeVal;
+            textLeading(t),
+                textAlign(CENTER);
+            let e = newString.toUpperCase();
+            if (specialText) {
+                let a = e.split(" "),
+                    r = e;
+                switch (specialTextIndex) {
+                    case 0:
+                        let i = WIDTH / 24,
+                            s = .88,
+                            n = .044;
+                        t = textSizeVal,
+                            translate(width / 2, height / 2 - (a.length - 2) * t / 2);
+                        for (let e = 0; e < a.length; e++) {
+                            r = a[e],
+                                push(),
+                                translate(1.05 * -textWidth(r) / 2, e * t);
+                            let o = 0;
+                            for (var l = 0; l < r.length; l++) {
+                                let t = sin(frameCount * n + l * s) * i;
+                                push(),
+                                    fill(txtc);
+                                let e = 1.05 * textWidth(r.charAt(l));
+                                translate(o + e / 2, 0),
+                                    o += e,
+                                    drawCharacter(r.charAt(l), 0, t, txtc),
+                                    pop()
+                            }
+                            pop()
+                        }
+                        break;
+                    case 1:
+                        if (background(bc1), specialTextWavy) {
+                            let a = 20;
+                            t = 1.06 * textSizeVal;
+                            let r = WIDTH / 24,
+                                i = .2,
+                                s = .033;
+                            translate(width / 2, height / 2 - (a - 1) * t / 2),
+                                noStroke(),
+                                textAlign(CENTER);
+                            for (let n = 0; n < a; n++) {
+                                push(),
+                                    translate(-textWidth(e) / 2, n * t);
+                                let a = 0;
+                                for (l = 0; l < e.length; l++) {
+                                    let t = sin(frameCount * s + l * i) * r;
+                                    push();
+                                    let n = textWidth(e.charAt(l));
+                                    translate(a + n / 2, 0),
+                                        a += n,
+                                        textStyle(BOLD),
+                                        drawCharacter(e.charAt(l), 0, t, txtc),
+                                        pop()
+                                }
+                                pop()
+                            }
+                        } else {
+                            let l = 17;
+                            textSizeVal = .05 * WIDTH,
+                                t = 1.06 * textSizeVal,
+                                textSize(textSizeVal),
+                                push(),
+                                translate(width / 2, height / 2 - t * l * .47);
+                            for (let a = 0; a < l; a++)
+                                push(),
+                                    translate(0, a * t),
+                                    fill(lerpColor(txtc, shadowColor, sin(frameCount / 222) + map(a / l, 0, 1, 0, 1))),
+                                    stroke(lerpColor(txtc, shadowColor, sin(frameCount / 222) + map(a / l, 0, 1, 0, 1))),
+                                    strokeWeight(.03 * textSizeVal),
+                                    text(e, 0, 0),
+                                    pop();
+                            pop()
+                        }
+                        break;
+                    case 2:
+                        push(),
+                            fill(txtc),
+                            stroke(txtc),
+                            translate(WIDTH / 2, 1.333 * t),
+                            strokeWeight(.03 * textSizeVal),
+                            text(e, 0, 0),
+                            pop();
+                        let o = .177 * HEIGHT,
+                            h = 0,
+                            c = .2 * WIDTH,
+                            d = .3 * WIDTH;
+                        for (let t = 0; t < 3; t++) {
+                            for (let t = 0; t < 3; t++)
+                                candyHearts[h].draw(c + t * d, o, .377 * d),
+                                    h++;
+                            o += d
+                        }
+                        break;
+                    case 3:
+                        push(),
+                            fill(txtc),
+                            stroke(txtc),
+                            strokeWeight(.03 * textSizeVal),
+                            textAlign(CENTER, CENTER);
+                        let p = .777 * WIDTH;
+                        translate(WIDTH / 2 - p / 2 + .3 * textSizeVal / 2, 0),
+                            text(e, 0, 0, p, HEIGHT),
+                            pop()
+                }
+            }
+            let a = textWidth(newString),
+                r = [];
+            if (!specialText && a > .5 * width)
+                if (idw.length <= 1)
+                    stickers = !1;
+                else if (splitText) {
+                    let t = "",
+                        l = "";
+                    for (let e = 0; e < Math.ceil(numWords / 2); e++) {
+                        let a = l + idw[e];
+                        textWidth(a) > .777 * width && 0 != e && nspc.indexOf(idw[e]) <= -1 ? (t = t + "\n" + idw[e], l = idw[e]) : 0 != e && nspc.indexOf(idw[e]) <= -1 ? (t = t + " " + idw[e], l = l + " " + idw[e]) : (t += idw[e], l += idw[e])
+                    }
+                    r.push(t),
+                        t = "",
+                        l = "";
+                    for (let e = Math.ceil(numWords / 2); e < numWords; e++) {
+                        let a = l + idw[e];
+                        textWidth(a) > .777 * width && 0 != e && nspc.indexOf(idw[e]) <= -1 ? (t = t + "\n" + idw[e], l = idw[e]) : 0 != e && nspc.indexOf(idw[e]) <= -1 ? (t = t + " " + idw[e], l = l + " " + idw[e]) : (t += idw[e], l += idw[e])
+                    }
+                    r.push(t),
+                        e = t
+                } else if (idw.length >= 5) {
+                    let t = "",
+                        l = "";
+                    for (let e = 0; e < numWords; e++) {
+                        let a = l + idw[e];
+                        textWidth(a) > .777 * width && 0 != e && nspc.indexOf(idw[e]) <= -1 ? (t = t + "\n" + idw[e], l = idw[e]) : 0 != e && nspc.indexOf(idw[e]) <= -1 ? (t = t + " " + idw[e], l = l + " " + idw[e]) : (t += idw[e], l += idw[e])
+                    }
+                    e = t
+                } else {
+                    let t = "";
+                    for (let e = 0; e < idw.length; e++)
+                        0 != e && nspc.indexOf(idw[e]) <= -1 ? t = t + "\n" + idw[e] : t += idw[e];
+                    e = t
+                }
+            if (!specialText) {
+                fill(txtc);
+                let a = e.split("\n"),
+                    i = e;
+                if (angleMode(DEGREES), noStroke(), textAlign(CENTER), splitText) {
+                    let e = r[0].split("\n");
+                    push(),
+                        translate(width / 2, 1.222 * t);
+                    for (let a = 0; a < e.length; a++) {
+                        i = e[a].trim(),
+                            push(),
+                            translate(-textWidth(i) / 2, a * t);
+                        let r = 0;
+                        for (l = 0; l < i.length; l++) {
+                            push();
+                            let t = textWidth(i.charAt(l));
+                            translate(r + t / 2, 0),
+                                r += t,
+                                drawCharacter(i.charAt(l), 0, 0, txtc),
+                                pop()
+                        }
+                        pop()
+                    }
+                    pop(),
+                        e = r[1].split("\n"),
+                        push(),
+                        translate(width / 2, height - e.length * t * 1.222);
+                    for (let a = 0; a < e.length; a++) {
+                        i = e[a].trim(),
+                            push(),
+                            translate(-textWidth(i) / 2, a * t);
+                        let r = 0;
+                        for (l = 0; l < i.length; l++) {
+                            push();
+                            let t = textWidth(i.charAt(l));
+                            translate(r + t / 2, 0),
+                                drawCharacter(i.charAt(l), 0, 0, txtc),
+                                r += t,
+                                pop()
+                        }
+                        pop()
+                    }
+                    pop();
+                    let a = WIDTH / 55,
+                        s = .75 * WIDTH,
+                        n = bc1;
+                    switch (centerSticker) {
+                        case 0:
+                            let t = WIDTH / 100;
+                            heart2(WIDTH / 2, HEIGHT / 2 - t / 2, t);
+                            break;
+                        case 1:
+                            let e = WIDTH / 10;
+                            push(),
+                                angleMode(DEGREES),
+                                translate(WIDTH / 2, HEIGHT / 2),
+                                star(0, 0, e, 2 * e, 12),
+                                pop();
+                            break;
+                        case 2:
+                            let l = WIDTH / 8;
+                            push(),
+                                angleMode(DEGREES),
+                                translate(WIDTH / 2, HEIGHT / 2),
+                                flower5Cutout(0, 0, l, bc1, txtc),
+                                n = txtc,
+                                pop()
+                    }
+                    cuteFace(WIDTH / 2, HEIGHT / 2 + a, s, n, smileyType)
+                } else {
+                    push(),
+                        translate(width / 2, height / 2 - (a.length - 1) * t / 2);
+                    for (let e = 0; e < a.length; e++) {
+                        i = a[e].trim(),
+                            push(),
+                            translate(-textWidth(i) / 2, e * t);
+                        let r = 0;
+                        -textWidth(i) / 2 < textMinX && (textMinX = -textWidth(i) / 2),
+                            0 == e && (textMinY = e * t - t / 2),
+                            textWidth(i) > textMaxWidth && (textMaxWidth = textWidth(i)),
+                            e == a.length - 1 && (textMaxHeight = e * t - t / 2 + t),
+                            textBoundingBoxes.push([-textWidth(i) / 2, e * t - t / 2, textWidth(i), t]);
+                        for (l = 0; l < i.length; l++) {
+                            push();
+                            let t,
+                                s = textWidth(i.charAt(l));
+                            if (translate(r + s / 2, 0), r += s, shadow) {
+                                push();
+                                let t = .03 * textSizeVal;
+                                strokeWeight(t),
+                                    stroke(shadowColor),
+                                    noStroke(),
+                                    fill(shadowColor);
+                                let e = approxOne,
+                                    a = .0555 * t;
+                                for (let t = 0; t < 30; t++)
+                                    text(i.charAt(l), e + a * t, e + a * t);
+                                pop()
+                            }
+                            drawCharacter(i.charAt(l), 0, 0, txtc),
+                                noStroke();
+                            let n = .1 * WIDTH,
+                                o = textWidth("a");
+                            if (stickers)
+                                switch (stickerTypeIndex) {
+                                    case 0:
+                                        0 == e && 0 == l ? (translate(-s / 2, 0), translate(-o / 2, 0), fill(txtc), t = 133, sparkle(.1 * -n, .22 * -n, WIDTH / t, WIDTH / t * 2.5), t = 222, sparkle(.147 * n, .55 * -n, WIDTH / t, WIDTH / t * 2.5)) : e == a.length - 1 && l == i.length - 1 && (translate(s / 2, 0), translate(o / 2, 0), t = 222, sparkle(.15 * -n, .11 * n, WIDTH / t, WIDTH / t * 2.5), t = 133, sparkle(.1 * n, .22 * -n, WIDTH / t, WIDTH / t * 2.5));
+                                        break;
+                                    case 1:
+                                        0 == e && 0 == l ? (translate(-s / 2, 0), translate(-o / 2, 0), fill(txtc), t = 155, sparkle(0, .33 * -n, WIDTH / t, WIDTH / t * 2.5), t = 288, sparkle(.2 * n, .55 * -n, WIDTH / t, WIDTH / t * 2.5)) : 1 == e && l == i.length - 1 && a.length > 3 ? (translate(s / 2, 0), translate(o / 3, 0), t = 155, sparkle(.08 * n, .18 * n, WIDTH / t, WIDTH / t * 2.5), t = 288, sparkle(.05 * -n, .12 * -n, WIDTH / t, WIDTH / t * 2.5)) : e == a.length - 2 && 0 == l && a.length > 3 ? (translate(-s / 2, 0), translate(-o / 5, 0), fill(txtc), t = 155, sparkle(.11 * -n, .33 * -n, WIDTH / t, WIDTH / t * 2.5), t = 288, sparkle(.27 * -n, .11 * -n, WIDTH / t, WIDTH / t * 2.5)) : e == a.length - 1 && l == i.length - 1 && (translate(s / 2, 0), translate(o / 2, 0), t = 155, sparkle(.11 * -n, .22 * n, WIDTH / t, WIDTH / t * 2.5), t = 288, sparkle(.33 * -n, .5 * n, WIDTH / t, WIDTH / t * 2.5))
+                                }
+                            pop()
+                        }
+                        pop()
+                    }
+                    pop()
+                }
+            }
+        }
+    </script>
+    <style type="text/css">
+        html {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        canvas {
+            padding: 0;
+            margin: auto;
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="defaultCanvas0" class="p5Canvas" data-hidden="true"
+        style="visibility: hidden; width: 994px; height: 994px;" width="1988" height="1988"></canvas>
+</body>
+
+</html>
