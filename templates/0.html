@@ -6,15 +6,19 @@
     <meta charset="utf-8">
     <script src="0_files/p5.min.js"></script>
     <script>
-        const sp = new URLSearchParams(window.location.search).get("payload");
-        const searchParams = JSON.parse(sp ? atob(sp) : "{}")
 
-        console.log(searchParams.tokenId, searchParams.hash);
+        let inputHash = new URLSearchParams(window.location.search).get("hash");
+        const inputTokenId = new URLSearchParams(window.location.search).get("tokenId");
+
+        if (['413', '593', '908', '200', '203', '258'].includes(inputTokenId)) {
+            inputHash = inputHash + inputHash;
+        }
 
         let tokenData = {
-            "tokenId": searchParams.tokenId,
-            "hash": searchParams.hash
+            "tokenId": inputTokenId,
+            "hash": inputHash
         }
+
     </script>
     <script>
         const eps = Math.pow(2, -32),

@@ -6,14 +6,12 @@
     <meta charset="utf-8">
     <script src="3_files/p5.min.js"></script>
     <script>
-        const sp = new URLSearchParams(window.location.search).get("payload");
-        const searchParams = JSON.parse(sp ? atob(sp) : "{}")
-
-        console.log(searchParams.tokenId, searchParams.hash);
+        const inputHash = new URLSearchParams(window.location.search).get("hash");
+        const inputTokenId = new URLSearchParams(window.location.search).get("tokenId");
 
         let tokenData = {
-            "tokenId": searchParams.tokenId,
-            "hash": searchParams.hash
+            "tokenId": inputTokenId,
+            "hash": inputHash
         }
     </script>
     <script>

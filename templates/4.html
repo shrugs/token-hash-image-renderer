@@ -6,14 +6,12 @@
      <meta charset="utf-8">
      <script src="4_files/p5.min.js"></script>
      <script>
-          const sp = new URLSearchParams(window.location.search).get("payload");
-          const searchParams = JSON.parse(sp ? atob(sp) : "{}")
-
-          console.log(searchParams.tokenId, searchParams.hash);
+          const inputHash = new URLSearchParams(window.location.search).get("hash");
+          const inputTokenId = new URLSearchParams(window.location.search).get("tokenId");
 
           let tokenData = {
-               "tokenId": searchParams.tokenId,
-               "hash": searchParams.hash
+               "tokenId": inputTokenId,
+               "hash": inputHash
           }
      </script>
 
@@ -551,8 +549,8 @@
 </head>
 
 <body>
-     <canvas id="defaultCanvas0" class="p5Canvas" data-hidden="true"
-          style="visibility: hidden; width: 1728px; height: 994px;" width="3456" height="1988"></canvas>
+     <canvas id="defaultCanvas0" class="p5Canvas" style="width: 1728px; height: 994px;" width="3456"
+          height="1988"></canvas>
 </body>
 
 </html>
